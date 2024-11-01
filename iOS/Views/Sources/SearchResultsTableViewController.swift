@@ -33,27 +33,27 @@ class SearchResultsTableViewController: UIViewController, UISearchResultsUpdatin
 		])
 		self.tableView.dataSource = self
 		self.tableView.delegate = self
-		
+
 		self.activityIndicator = UIActivityIndicatorView(style: .medium)
 		self.activityIndicator.center = CGPoint(x: view.center.x, y: view.center.y)
 		self.activityIndicator.hidesWhenStopped = true
 		self.activityIndicator.startAnimating()
 		self.view.addSubview(activityIndicator)
 	}
-	
+
 	override func viewDidAppear(_ animated: Bool) {
 		super.viewDidAppear(animated)
 		fetchAppsForSources()
 	}
-	
+
 	func numberOfSections(in tableView: UITableView) -> Int { return filteredSources.keys.count }
 	func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat { return 40 }
-	
+
 	func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
 		let source = Array(filteredSources.keys)[section]
 		return filteredSources[source]?.count ?? 0
 	}
-	
+
 	func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
 		let source = Array(filteredSources.keys)[section]
 		let header = SearchAppSectionHeader(title: source.name ?? "Unknown", icon: UIImage(named: "unknown"))
@@ -74,31 +74,31 @@ class SearchResultsTableViewController: UIViewController, UISearchResultsUpdatin
 
 	func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 		let cell = UITableViewCell(style: .subtitle, reuseIdentifier: "Cell")
-		
+
 		let source = Array(filteredSources.keys)[indexPath.section]
 		let app = filteredSources[source]?[indexPath.row]
-		
+
 		var appname = app?.name ?? String.localized("UNKNOWN")
-		
+
 		if app!.bundleIdentifier.hasSuffix("Beta") {
 			appname += " (Beta)"
 		}
-		
+
 		cell.textLabel?.text = appname
-		
+
 		let appVersion = (app?.versions?.first?.version ?? app?.version) ?? "1.0"
-		let appSubtitle = app?.subtitle ?? (app?.localizedDescription ?? String.localized("SOURCES_CELLS_DEFAULT_SUBTITLE"))
+		let appSubtitle = app?.localizedDescription ?? (app?.localizedDescription ?? String.localized("SOURCES_CELLS_DEFAULT_SUBTITLE"))
 		let displayText = appVersion + " • " + appSubtitle
 
-		
+
 		cell.detailTextLabel?.text = displayText
 		cell.detailTextLabel?.textColor = .secondaryLabel
 
 		cell.accessoryType = .disclosureIndicator
-		
+
 		let placeholderImage = UIImage(named: "unknown")
 		let imageSize = CGSize(width: 30, height: 30)
-		
+
 		func setImage(_ image: UIImage?) {
 			let resizedImage = UIGraphicsImageRenderer(size: imageSize).image { context in
 				image?.draw(in: CGRect(origin: .zero, size: imageSize))
@@ -112,7 +112,7 @@ class SearchResultsTableViewController: UIViewController, UISearchResultsUpdatin
 		}
 
 		setImage(placeholderImage)
-		
+
 		if let iconURL = app?.iconURL {
 			SectionIcons.loadImageFromURL(from: iconURL) { image in
 				DispatchQueue.main.async {
@@ -122,41 +122,41 @@ class SearchResultsTableViewController: UIViewController, UISearchResultsUpdatin
 				}
 			}
 		}
-		
+
 		return cell
 	}
-	
+
 	func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
 		let source = Array(filteredSources.keys)[indexPath.section]
 		let app = filteredSources[source]?[indexPath.row]
-		
+
 		if let url = sourceURLMapping[source] {
 			let savc = SourceAppViewController()
 			savc.name = source.name
 			savc.uri = [url]
-			
+
 			savc.highlightAppName = app?.name
 			savc.highlightBundleID = app?.bundleIdentifier
 			savc.highlightVersion = app?.version ?? app?.versions?[0].version
 			savc.highlightDeveloperName = app?.developerName
 			savc.highlightDescription = app?.localizedDescription
-			
+
 			let navigationController = UINavigationController(rootViewController: savc)
 
 			if let presentationController = navigationController.presentationController as? UISheetPresentationController {
 				presentationController.detents = [.medium(), .large()]
 			}
-			
+
 			self.present(navigationController, animated: true, completion: nil)
 		}
-		
+
 		tableView.deselectRow(at: indexPath, animated: true)
 	}
 
 
 	func updateSearchResults(for searchController: UISearchController) {
 		let searchText = searchController.searchBar.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-		
+
 		if !dataFetched { fetchAppsForSources() }
 
 		filteredSources.removeAll()

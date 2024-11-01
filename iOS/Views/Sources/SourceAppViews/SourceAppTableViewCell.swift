@@ -11,14 +11,14 @@ import UIKit
 import Nuke
 
 class AppTableViewCell: UITableViewCell {
-	
+
 	public var appDownload: AppDownload?
 	private var progressObserver: NSObjectProtocol?
 
 	private let progressLayer = CAShapeLayer()
 	private var getButtonWidthConstraint: NSLayoutConstraint?
 	private var buttonImage: UIImage?
-	
+
 	private let iconImageView: UIImageView = {
 		let imageView = UIImageView()
 		imageView.contentMode = .scaleAspectFill
@@ -44,7 +44,7 @@ class AppTableViewCell: UITableViewCell {
 		label.numberOfLines = 2
 		return label
 	}()
-	
+
 	private let descriptionLabel: UILabel = {
 		let label = UILabel()
 		label.font = .systemFont(ofSize: 13, weight: .regular)
@@ -68,7 +68,7 @@ class AppTableViewCell: UITableViewCell {
 		stackView.translatesAutoresizingMaskIntoConstraints = false
 		return stackView
 	}()
-	
+
 	let getButton: UIButton = {
 		let button = UIButton(type: .system)
 		button.layer.cornerRadius = 15
@@ -99,7 +99,7 @@ class AppTableViewCell: UITableViewCell {
 		screenshotsScrollView.addSubview(screenshotsStackView)
 		contentView.addSubview(getButton)
 		contentView.addSubview(descriptionLabel)
-		
+
 
 		iconImageView.translatesAutoresizingMaskIntoConstraints = false
 		labelsStackView.translatesAutoresizingMaskIntoConstraints = false
@@ -118,12 +118,12 @@ class AppTableViewCell: UITableViewCell {
 			labelsStackView.trailingAnchor.constraint(equalTo: getButton.leadingAnchor, constant: -15),
 			labelsStackView.centerYAnchor.constraint(equalTo: iconImageView.centerYAnchor),
 			labelsStackView.topAnchor.constraint(greaterThanOrEqualTo: contentView.topAnchor, constant: 15),
-			
+
 			getButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -15),
 			getButton.centerYAnchor.constraint(equalTo: iconImageView.centerYAnchor),
 			getButtonWidthConstraint!,
 			getButton.heightAnchor.constraint(equalToConstant: 30),
-			
+
 			descriptionLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 15),
 			descriptionLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -15),
 
@@ -163,7 +163,7 @@ class AppTableViewCell: UITableViewCell {
 		progressLayer.path = circularPath.cgPath
 		getButton.layer.addSublayer(progressLayer)
 	}
-	
+
 	private func addObservers() {
 		progressObserver = NotificationCenter.default.addObserver(forName: .downloadProgressUpdated, object: nil, queue: .main) { [weak self] notification in
 			guard let self = self,
@@ -172,7 +172,7 @@ class AppTableViewCell: UITableViewCell {
 				  self.appDownload?.AppUUID == uuid else { return }
 		}
 	}
-	
+
 	override func layoutSubviews() {
 		super.layoutSubviews()
 		updateProgressLayerPath()
@@ -189,27 +189,27 @@ class AppTableViewCell: UITableViewCell {
 			NotificationCenter.default.removeObserver(observer)
 		}
 	}
-	
+
 	func configure(with app: StoreAppsData) {
 		var appname = app.name
 		if app.bundleIdentifier.hasSuffix("Beta") {
 			appname += " (Beta)"
 		}
-		
+
 		nameLabel.text = appname
 
 		let appVersion = (app.versions?.first?.version ?? app.version) ?? "1.0"
 		var displayText = appVersion
 		var descText = ""
-		
+
 		if Preferences.appDescriptionAppearence == 0 {
-			let appSubtitle = app.subtitle ?? String.localized("SOURCES_CELLS_DEFAULT_SUBTITLE")
+			let appSubtitle = app.localizedDescription ?? String.localized("SOURCES_CELLS_DEFAULT_SUBTITLE")
 			displayText += " • " + appSubtitle
 		} else if Preferences.appDescriptionAppearence == 1 {
 			let appSubtitle = app.localizedDescription ?? String.localized("SOURCES_CELLS_DEFAULT_SUBTITLE")
 			displayText += " • " + appSubtitle
 		} else if Preferences.appDescriptionAppearence == 2 {
-			let appSubtitle = app.subtitle ?? String.localized("SOURCES_CELLS_DEFAULT_SUBTITLE")
+			let appSubtitle = app.localizedDescription ?? String.localized("SOURCES_CELLS_DEFAULT_SUBTITLE")
 			displayText += " • " + appSubtitle
 			descText = app.localizedDescription ?? (app.versions?[0].localizedDescription ?? String.localized("SOURCES_CELLS_DEFAULT_DESCRIPTION"))
 		}
@@ -255,7 +255,7 @@ class AppTableViewCell: UITableViewCell {
 		screenshotsScrollView.topAnchor.constraint(equalTo: iconImageView.bottomAnchor, constant: 10).isActive = true
 		screenshotsScrollView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -15).isActive = true
 		iconImageView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 15).isActive = true
-		
+
 		imageViews.forEach { imageView in
 			screenshotsStackView.addArrangedSubview(imageView)
 			imageView.heightAnchor.constraint(equalTo: screenshotsScrollView.heightAnchor).isActive = true
@@ -263,19 +263,19 @@ class AppTableViewCell: UITableViewCell {
 
 		loadImages(from: urls, into: imageViews)
 	}
-	
+
 	private func setupDescription() {
 		iconImageView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 15).isActive = true
 		descriptionLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -15).isActive = true
 		descriptionLabel.topAnchor.constraint(equalTo: iconImageView.bottomAnchor, constant: 15).isActive = true
 	}
-	
+
 	@objc private func handleScreenshotTap(_ sender: UITapGestureRecognizer) {
 		guard let tappedImageView = sender.view as? UIImageView,
 			  let tappedImage = tappedImageView.image else {
 			return
 		}
-		
+
 		let fullscreenImageVC = SourceAppScreenshotViewController()
 		fullscreenImageVC.image = tappedImage
 
@@ -336,14 +336,14 @@ class AppTableViewCell: UITableViewCell {
 			}
 		}
 	}
-	
+
 	private func updateDownloadState(uuid: String?) {
 		guard let appUUID = uuid else {
 			return
 		}
-		
+
 		DownloadTaskManager.shared.restoreTaskState(for: appUUID, cell: self)
-				
+
 		if let task = DownloadTaskManager.shared.task(for: appUUID) {
 			switch task.state {
 			case .inProgress(_):
@@ -383,7 +383,7 @@ class AppTableViewCell: UITableViewCell {
 			})
 		}
 	}
-	
+
 	func cancelDownload() {
 		DispatchQueue.main.async {
 			self.stopDownload()
@@ -411,25 +411,25 @@ class SourceAppScreenshotViewController: UIViewController {
 		imageView.clipsToBounds = true
 		return imageView
 	}()
-	
+
 	override func viewDidLoad() {
 		super.viewDidLoad()
-		
+
 		view.backgroundColor = .systemBackground
-		
+
 		view.addSubview(imageView)
 		setupConstraints()
-		
+
 		imageView.image = image
-		
+
 		self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(closeSheet))
 	}
-	
+
 	override func viewDidLayoutSubviews() {
 		super.viewDidLayoutSubviews()
 		updateImageViewSize()
 	}
-	
+
 	private func setupConstraints() {
 		NSLayoutConstraint.activate([
 			imageView.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor),
@@ -438,25 +438,25 @@ class SourceAppScreenshotViewController: UIViewController {
 			imageView.heightAnchor.constraint(lessThanOrEqualTo: view.safeAreaLayoutGuide.heightAnchor, multiplier: 0.9)
 		])
 	}
-	
+
 	private func updateImageViewSize() {
 		guard let image = image else { return }
 		let imageSize = image.size
-		
+
 		let maxWidth = view.safeAreaLayoutGuide.layoutFrame.width * 0.9
 		let maxHeight = view.safeAreaLayoutGuide.layoutFrame.height * 0.9
-		
+
 		let aspectRatio = imageSize.width / imageSize.height
 		let constrainedWidth = min(imageSize.width, maxWidth)
 		let constrainedHeight = min(imageSize.height, maxHeight)
-		
+
 		let imageViewWidth = min(constrainedWidth, constrainedHeight * aspectRatio)
 		let imageViewHeight = min(constrainedHeight, constrainedWidth / aspectRatio)
-		
+
 		imageView.frame.size = CGSize(width: imageViewWidth, height: imageViewHeight)
 		imageView.center = view.center
 	}
-	
+
 	@objc func closeSheet() {
 		dismiss(animated: true)
 	}
